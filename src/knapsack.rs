@@ -15,47 +15,68 @@ enum Calc<'a, T> {
 }
 
 impl<'a, T> Calc<'a, T> {
+    #[inline]
     fn yet(items: &'a [T], limit: u64) -> Calc<'a, T> {
         Calc::Yet { items: items, limit: limit }
     }
+
+    #[inline]
+    fn as_max_mut(&mut self) -> Option<(&mut u64, &mut u64)> {
+        match self {
+            Calc::Yet { items: _, limit: _ } => None,
+            Calc::Max(x, y) => Some((x, y))
+        }
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+enum Index {
+    Left(usize),
+    Right(usize),
 }
 
 /// Solves the 0-1 knapsack problem.
 pub fn knapsack01<T: Item>(items: &[T], limit: u64) -> u64 {
-    unsafe {
-        let mut result = 0;
-        let mut calcs: Vec<Box<(*mut u64, Calc<T>)>> = Vec::new();
-        calcs.push(Box::new((&mut result, Calc::yet(items, limit))));
+    let mut calcs: Vec<(Index, Calc<T>)> = Vec::new();
+    calcs.push((Index::Left(0), Calc::yet(items, limit)));
 
-        loop {
-            if let Some((result, calc)) = calcs.pop().map(|x| *x) {
-                match calc {
-                    Calc::Max(x, y) => { *result += max(x, y) }
-                    Calc::Yet { items, limit } => {
-                        if let Some((job, jobs)) = items.split_last() {
-                            if job.weight() > limit {
-                                calcs.push(Box::new((result, Calc::yet(jobs, limit))));
-                            } else {
-                                calcs.push(Box::new((result, Calc::Max(0, job.value()))));
-                                let (res0, res1): (*mut u64, *mut u64) = {
-                                    if let &mut (_, Calc::Max(ref mut res0, ref mut res1)) = calcs.last_mut().unwrap().as_mut() {
-                                        (res0, res1)
-                                    } else {
-                                        panic!("unreachable");
-                                    }
-                                };
-                                calcs.push(Box::new((res0, Calc::yet(jobs, limit))));
-                                calcs.push(Box::new((res1, Calc::yet(jobs, limit - job.weight()))));
+    loop {
+        if let Some((result, calc)) = calcs.pop() {
+            match calc {
+                Calc::Max(x, y) => {
+                    if calcs.is_empty() {
+                        break max(x, y);
+                    } else {
+                        match result {
+                            Index::Left(i) => {
+                                *calcs[i].1.as_max_mut().unwrap().0 += max(x, y);
+                            }
+                            Index::Right(i) => {
+                                *calcs[i].1.as_max_mut().unwrap().1 += max(x, y);
                             }
                         }
                     }
                 }
-            } else {
-                break;
+                Calc::Yet { items, limit } => {
+                    if let Some((job, jobs)) = items.split_last() {
+                        if job.weight() > limit {
+                            calcs.push((result, Calc::yet(jobs, limit)));
+                        } else {
+                            let i = calcs.len();
+                            calcs.push((result, Calc::Max(0, job.value())));
+                            calcs.push((Index::Left(i), Calc::yet(jobs, limit)));
+                            calcs.push((Index::Right(i), Calc::yet(jobs, limit - job.weight())));
+                        }
+                    } else {
+                        if calcs.is_empty() {
+                            break 0;
+                        }
+                    }
+                }
             }
+        } else {
+            panic!("unreachable");
         }
-
-        result
     }
 }
 
@@ -107,6 +128,14 @@ mod tests {
         let bags = [Bag::new(3, 2), Bag::new(2, 1), Bag::new(2, 1), Bag::new(5, 2)];
         let limit = 4;
         assert_eq!(knapsack01_rec(&bags, limit), 9);
+
+        let bags = [Bag::new(2, 1), Bag::new(5, 2)];
+        let limit = 4;
+        assert_eq!(knapsack01(&bags, limit), 7);
+
+        let bags = [Bag::new(3, 2), Bag::new(2, 1), Bag::new(2, 1), Bag::new(5, 2)];
+        let limit = 4;
+        assert_eq!(knapsack01(&bags, limit), 9);
     }
 
     #[test]
