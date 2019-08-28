@@ -1,7 +1,10 @@
 use std::cmp::max;
 
 pub trait Item {
+    /// Returns the value.
     fn value(&self) -> u64;
+
+    /// Returns the weight.
     fn weight(&self) -> u64;
 }
 
@@ -17,6 +20,7 @@ impl<'a, T> Calc<'a, T> {
     }
 }
 
+/// Solves the 0-1 knapsack problem.
 pub fn knapsack01<T: Item>(items: &[T], limit: u64) -> u64 {
     unsafe {
         let mut result = 0;
