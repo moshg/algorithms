@@ -10,20 +10,20 @@ pub trait Item {
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 enum Calc<'a, T> {
-    Yet { items: &'a [T], limit: u64 },
+    Arg { items: &'a [T], limit: u64 },
     Max(u64, u64),
 }
 
 impl<'a, T> Calc<'a, T> {
     #[inline]
-    fn yet(items: &'a [T], limit: u64) -> Calc<'a, T> {
-        Calc::Yet { items: items, limit: limit }
+    fn arg(items: &'a [T], limit: u64) -> Calc<'a, T> {
+        Calc::Arg { items: items, limit: limit }
     }
 
     #[inline]
     fn as_max_mut(&mut self) -> Option<(&mut u64, &mut u64)> {
         match self {
-            Calc::Yet { items: _, limit: _ } => None,
+            Calc::Arg { items: _, limit: _ } => None,
             Calc::Max(x, y) => Some((x, y))
         }
     }
@@ -37,45 +37,42 @@ enum Index {
 
 /// Solves the 0-1 knapsack problem.
 pub fn knapsack01<T: Item>(items: &[T], limit: u64) -> u64 {
-    let mut calcs: Vec<(Index, Calc<T>)> = Vec::new();
-    calcs.push((Index::Left(0), Calc::yet(items, limit)));
+    let mut stack: Vec<(Index, Calc<T>)> = Vec::new();
+    stack.push((Index::Left(0), Calc::arg(items, limit)));
 
     loop {
-        if let Some((result, calc)) = calcs.pop() {
-            match calc {
-                Calc::Max(x, y) => {
-                    if calcs.is_empty() {
-                        break max(x, y);
-                    } else {
-                        match result {
-                            Index::Left(i) => {
-                                *calcs[i].1.as_max_mut().unwrap().0 += max(x, y);
-                            }
-                            Index::Right(i) => {
-                                *calcs[i].1.as_max_mut().unwrap().1 += max(x, y);
-                            }
+        let (result, calc) = stack.pop().unwrap();
+        match calc {
+            Calc::Max(x, y) => {
+                if stack.is_empty() {
+                    return max(x, y);
+                } else {
+                    match result {
+                        Index::Left(i) => {
+                            *stack[i].1.as_max_mut().unwrap().0 += max(x, y);
                         }
-                    }
-                }
-                Calc::Yet { items, limit } => {
-                    if let Some((job, jobs)) = items.split_last() {
-                        if job.weight() > limit {
-                            calcs.push((result, Calc::yet(jobs, limit)));
-                        } else {
-                            let i = calcs.len();
-                            calcs.push((result, Calc::Max(0, job.value())));
-                            calcs.push((Index::Left(i), Calc::yet(jobs, limit)));
-                            calcs.push((Index::Right(i), Calc::yet(jobs, limit - job.weight())));
-                        }
-                    } else {
-                        if calcs.is_empty() {
-                            break 0;
+                        Index::Right(i) => {
+                            *stack[i].1.as_max_mut().unwrap().1 += max(x, y);
                         }
                     }
                 }
             }
-        } else {
-            panic!("unreachable");
+            Calc::Arg { items, limit } => {
+                if let Some((job, jobs)) = items.split_last() {
+                    if job.weight() > limit {
+                        stack.push((result, Calc::arg(jobs, limit)));
+                    } else {
+                        let i = stack.len();
+                        stack.push((result, Calc::Max(0, job.value())));
+                        stack.push((Index::Left(i), Calc::arg(jobs, limit)));
+                        stack.push((Index::Right(i), Calc::arg(jobs, limit - job.weight())));
+                    }
+                } else {
+                    if stack.is_empty() {
+                        return 0;
+                    }
+                }
+            }
         }
     }
 }
