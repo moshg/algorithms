@@ -79,8 +79,10 @@ pub fn knapsack01<T: Item>(items: &[T], limit: u64) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use std::cmp::max;
+    extern crate rand;
 
+    use std::cmp::max;
+    use self::rand::{thread_rng, Rng};
     use super::{Item, knapsack01};
 
     fn knapsack01_rec<T: Item>(items: &[T], limit: u64) -> u64 {
@@ -122,6 +124,10 @@ mod tests {
 
     #[test]
     fn test_knapsack_rec() {
+        let bags: [Bag; 0] = [];
+        let limit = 10;
+        assert_eq!(knapsack01(&bags, limit), 0);
+
         let bags = [Bag::new(3, 2), Bag::new(2, 1), Bag::new(2, 1), Bag::new(5, 2)];
         let limit = 4;
         assert_eq!(knapsack01_rec(&bags, limit), 9);
@@ -137,6 +143,10 @@ mod tests {
 
     #[test]
     fn test_knapsack() {
+        let bags: [Bag; 0] = [];
+        let limit = 10;
+        assert_eq!(knapsack01(&bags, limit), 0);
+
         let bags = [Bag::new(3, 2)];
         let limit = 1;
         assert_eq!(knapsack01(&bags, limit), 0);
@@ -148,5 +158,12 @@ mod tests {
         let bags = [Bag::new(3, 2), Bag::new(2, 1), Bag::new(2, 1), Bag::new(5, 2)];
         let limit = 4;
         assert_eq!(knapsack01(&bags, limit), 9);
+
+        for _ in 0..10 {
+            let size = thread_rng().gen_range(1, 10);
+            let bags: Vec<Bag> = (0..size).map(|_| Bag::new(thread_rng().gen_range(0, 100), thread_rng().gen_range(0, 100))).collect();
+            let limit = thread_rng().gen_range(0, 250);
+            assert_eq!(knapsack01(&bags, limit), knapsack01_rec(&bags, limit));
+        }
     }
 }
