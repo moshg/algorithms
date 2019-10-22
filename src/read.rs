@@ -1,4 +1,4 @@
-/// Extension of io module.
+/// A module for easy use of io.
 pub mod io_ext {
     use std::mem;
     use std::io::BufRead;
@@ -53,7 +53,7 @@ pub mod io_ext {
     }
 }
 
-/// Module supporting to parse strings.
+/// Parsing Iterator.
 pub mod parse {
     use std::str::FromStr;
     use std::borrow::Borrow;
