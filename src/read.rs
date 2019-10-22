@@ -58,17 +58,17 @@ pub mod parse {
     use std::str::FromStr;
     use std::borrow::Borrow;
 
-    pub trait FromStrIter {
+    pub trait FromStrIterator {
         fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(i: I) -> Self;
     }
 
     pub trait ParseAll {
-        fn parse_all<F: FromStrIter>(self) -> F;
+        fn parse_all<F: FromStrIterator>(self) -> F;
     }
 
     impl<S: Borrow<str>, I: Iterator<Item=S>> ParseAll for I {
         #[inline]
-        fn parse_all<F: FromStrIter>(self) -> F {
+        fn parse_all<F: FromStrIterator>(self) -> F {
             F::from_str_iter(self)
         }
     }
@@ -78,7 +78,7 @@ pub mod parse {
     }
 
 	// To avoid conflict, this is not implemented for `A` but `(A,)`.
-	impl<A: FromStr> FromStrIter for (A,) {
+	impl<A: FromStr> FromStrIterator for (A,) {
 		fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
 			let a = parse(&mut i);
 			if i.next().is_some() {
@@ -88,7 +88,7 @@ pub mod parse {
 		}
 	}
 
-    impl<A: FromStr, B: FromStr> FromStrIter for (A, B) {
+    impl<A: FromStr, B: FromStr> FromStrIterator for (A, B) {
         fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
             let a = parse(&mut i);
             let b = parse(&mut i);
@@ -99,7 +99,7 @@ pub mod parse {
         }
     }
 
-    impl<A: FromStr, B: FromStr, C: FromStr> FromStrIter for (A, B, C) {
+    impl<A: FromStr, B: FromStr, C: FromStr> FromStrIterator for (A, B, C) {
         fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
             let a = parse(&mut i);
             let b = parse(&mut i);
@@ -111,7 +111,7 @@ pub mod parse {
         }
     }
 
-    impl<T: FromStr> FromStrIter for Vec<T> {
+    impl<T: FromStr> FromStrIterator for Vec<T> {
         fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(i: I) -> Self {
             i.map(|s| s.borrow().parse().unwrap_or_else(|_| panic!("parse error"))).collect()
         }
