@@ -5,12 +5,12 @@ use std::mem;
 #[derive(Clone, Eq, PartialEq, Default, Debug, Hash)]
 pub struct Graph {
     vertices: usize,
-    weights: Box<[usize]>,
+    weights: Box<[i64]>,
 }
 
 impl Graph {
     pub fn new(vertices: usize) -> Self {
-        let mut graph = Graph { vertices: vertices, weights: vec![usize::max_value(); vertices * vertices].into_boxed_slice() };
+        let mut graph = Graph { vertices: vertices, weights: vec![-1; vertices * vertices].into_boxed_slice() };
         for v in 0..vertices {
             graph.weights[v * vertices + v] = 0;
         }
@@ -25,15 +25,21 @@ impl Graph {
         }
     }
 
+    /// Returns weight of the edge if exists, or else returns -1.
     #[inline]
-    pub fn weight(&self, edge: (usize, usize)) -> usize {
+    pub fn weight(&self, edge: (usize, usize)) -> i64 {
         self.check_edge(edge);
         self.weights[edge.0 * self.vertices + edge.1]
     }
 
     /// Adds edge to the graph and returns old weight at `edge`.
-    pub fn set_weight(&mut self, edge: (usize, usize), weight: usize) -> usize {
+    ///
+    /// `weight` must be >= 0 or -1 (remove the edge)
+    pub fn set_weight(&mut self, edge: (usize, usize), weight: i64) -> i64 {
         self.check_edge(edge);
+        if weight < -1 {
+            panic!("weight must be >= 0 or -1 but weight is {}", weight);
+        }
 
         let old = self.weights[edge.0 * self.vertices + edge.1];
         self.weights[edge.0 * self.vertices + edge.1] = weight;
@@ -42,7 +48,6 @@ impl Graph {
     }
 }
 
-// FIXME: can overflow.
 pub fn warshall_floyd(graph: Graph) -> Graph {
     let mut path = graph;
     let mut new_path = Graph::new(path.vertices);
@@ -53,13 +58,18 @@ pub fn warshall_floyd(graph: Graph) -> Graph {
                 let indirect = {
                     let first = path.weight((i, k));
                     let second = path.weight((k, j));
-                    if first == usize::max_value() || second == usize::max_value() {
-                        usize::max_value()
+                    if first == -1 || second == -1 {
+                        -1
                     } else {
-                        first + second
+                        let sum = first + second;
+                        if sum < 0 {
+                            panic!("overflow occurred")
+                        }
+                        sum
                     }
                 };
-                new_path.set_weight((i, j), cmp::min(direct, indirect));
+                // Regard -1 as u64::MAX + 1
+                new_path.set_weight((i, j), cmp::min(direct as u64, indirect as u64) as i64);
             }
         }
         mem::swap(&mut path, &mut new_path);
