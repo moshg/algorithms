@@ -2,3 +2,4 @@
 
 pub mod read;
 pub mod knapsack;
+pub mod warshall_floyd;
