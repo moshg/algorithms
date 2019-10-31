@@ -77,6 +77,17 @@ pub mod parse {
         i.next().unwrap_or_else(|| panic!("too few strings error")).borrow().parse().unwrap_or_else(|_| panic!("parse error"))
     }
 
+	// To avoid conflict, this is not implemented for `A` but `(A,)`.
+	impl<A: FromStr> FromStrIter for (A,) {
+		fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
+			let a = parse(&mut i);
+			if i.next().is_some() {
+				panic!("too many strings error");
+			}
+			(a,)
+		}
+	}
+
     impl<A: FromStr, B: FromStr> FromStrIter for (A, B) {
         fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
             let a = parse(&mut i);
