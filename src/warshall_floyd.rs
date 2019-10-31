@@ -35,16 +35,14 @@ impl Graph {
     /// Adds edge to the graph and returns old weight at `edge`.
     ///
     /// `weight` must be >= 0 or -1 (remove the edge)
-    pub fn set_weight(&mut self, edge: (usize, usize), weight: i64) -> i64 {
+    pub fn set_weight(&mut self, edge: (usize, usize), weight: i64) {
         self.check_edge(edge);
         if weight < -1 {
             panic!("weight must be >= 0 or -1 but weight is {}", weight);
         }
 
-        let old = self.weights[edge.0 * self.vertices + edge.1];
         self.weights[edge.0 * self.vertices + edge.1] = weight;
         self.weights[edge.1 * self.vertices + edge.0] = weight;
-        old
     }
 }
 
