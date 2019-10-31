@@ -58,20 +58,51 @@ pub mod parse {
     use std::str::FromStr;
     use std::borrow::Borrow;
 
-    pub trait ParseNext: Iterator {
-        fn parse_next<F: FromStr>(&mut self) -> F;
+    pub trait FromStrIter {
+        fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(i: I) -> Self;
     }
 
-    impl<'a, S: Borrow<str>, I: Iterator<Item=S>> ParseNext for I {
-        fn parse_next<F: FromStr>(&mut self) -> F {
-            if let Some(s) = self.next() {
-                match s.borrow().parse() {
-                    Ok(x) => x,
-                    Err(_) => panic!("provided string cannot be parsed")
-                }
-            } else {
-                panic!("iterator has no next element")
+    pub trait ParseAll {
+        fn parse_all<F: FromStrIter>(self) -> F;
+    }
+
+    impl<S: Borrow<str>, I: Iterator<Item=S>> ParseAll for I {
+        #[inline]
+        fn parse_all<F: FromStrIter>(self) -> F {
+            F::from_str_iter(self)
+        }
+    }
+
+    fn parse<S: Borrow<str>, I: Iterator<Item=S>, F: FromStr>(i: &mut I) -> F {
+        i.next().unwrap_or_else(|| panic!("too few strings error")).borrow().parse().unwrap_or_else(|_| panic!("parse error"))
+    }
+
+    impl<A: FromStr, B: FromStr> FromStrIter for (A, B) {
+        fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
+            let a = parse(&mut i);
+            let b = parse(&mut i);
+            if i.next().is_some() {
+                panic!("too many strings error");
             }
+            (a, b)
+        }
+    }
+
+    impl<A: FromStr, B: FromStr, C: FromStr> FromStrIter for (A, B, C) {
+        fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
+            let a = parse(&mut i);
+            let b = parse(&mut i);
+            let c = parse(&mut i);
+            if i.next().is_some() {
+                panic!("too many strings error");
+            }
+            (a, b, c)
+        }
+    }
+
+    impl<T: FromStr> FromStrIter for Vec<T> {
+        fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(i: I) -> Self {
+            i.map(|s| s.borrow().parse().unwrap_or_else(|_| panic!("parse error"))).collect()
         }
     }
 }
