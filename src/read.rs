@@ -1,5 +1,6 @@
 /// Extension of io module.
 pub mod io_ext {
+    use std::mem;
     use std::io::BufRead;
 
     pub struct Reader<R> {
@@ -26,6 +27,28 @@ pub mod io_ext {
             self.buf.clear();
             self.inner.read_line(&mut self.buf).unwrap_or_else(|e| panic!("{}", e));
             self.buf.trim_right()
+        }
+
+        pub fn read_lines(&mut self, n: usize) -> Lines<R> {
+            Lines { reader: self, n: n }
+        }
+    }
+
+    pub struct Lines<'a, R> {
+        reader: &'a mut Reader<R>,
+        n: usize,
+    }
+
+    impl<'a, R: BufRead> Iterator for Lines<'a, R> {
+        type Item = &'a str;
+
+        fn next(&mut self) -> Option<&'a str> {
+            if self.n > 0 {
+                self.n -= 1;
+                unsafe { Some(mem::transmute::<_, &'a str>(self.reader.read_line())) }
+            } else {
+                None
+            }
         }
     }
 }
