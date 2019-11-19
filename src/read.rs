@@ -119,6 +119,10 @@ pub mod parse {
 
 #[cfg(test)]
 mod tests {
+    use std::io::BufReader;
+
+    use super::{io_ext::Reader, parse::ParseAll};
+
     #[test]
     fn test_read_lines() {
         use std::io::BufReader;
@@ -128,5 +132,33 @@ mod tests {
         let mut r = Reader::new(BufReader::new(input));
         let s: Vec<String> = r.read_lines(3).collect();
         assert_eq!(s, vec!["1", "3", "5"]);
+    }
+
+    #[test]
+    fn test_parse_all() {
+        let input: &[u8] = b"1 3 5";
+        let mut r = Reader::new(BufReader::new(input));
+        let t: (i32, i32, i32) = r.read_line().split_whitespace().parse_all();
+        assert_eq!(t, (1, 3, 5));
+
+        let mut r = Reader::new(BufReader::new(input));
+        let v: Vec<i32> = r.read_line().split_whitespace().parse_all();
+        assert_eq!(v, [1, 3, 5]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_parse_less() {
+        let input: &[u8] = b"1 3";
+        let mut r = Reader::new(BufReader::new(input));
+        r.read_line().split_whitespace().parse_all::<(i32, i32, i32)>();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_parse_more() {
+        let input: &[u8] = b"1 3 5";
+        let mut r = Reader::new(BufReader::new(input));
+        r.read_line().split_whitespace().parse_all::<(i32, i32)>();
     }
 }
