@@ -1,6 +1,5 @@
 /// A module for easy use of io.
 pub mod io_ext {
-    use std::mem;
     use std::io::BufRead;
 
     pub struct Reader<R> {
@@ -40,12 +39,12 @@ pub mod io_ext {
     }
 
     impl<'a, R: BufRead> Iterator for Lines<'a, R> {
-        type Item = &'a str;
+        type Item = String;
 
-        fn next(&mut self) -> Option<&'a str> {
+        fn next(&mut self) -> Option<String> {
             if self.n > 0 {
                 self.n -= 1;
-                unsafe { Some(mem::transmute::<_, &'a str>(self.reader.read_line())) }
+                Some(self.reader.read_line().to_owned())
             } else {
                 None
             }
@@ -55,8 +54,8 @@ pub mod io_ext {
 
 /// Parsing Iterator.
 pub mod parse {
-    use std::str::FromStr;
     use std::borrow::Borrow;
+    use std::str::FromStr;
 
     pub trait FromStrIterator {
         fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(i: I) -> Self;
@@ -77,16 +76,16 @@ pub mod parse {
         i.next().unwrap_or_else(|| panic!("too few strings error")).borrow().parse().unwrap_or_else(|_| panic!("parse error"))
     }
 
-	// To avoid conflict, this is not implemented for `A` but `(A,)`.
-	impl<A: FromStr> FromStrIterator for (A,) {
-		fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
-			let a = parse(&mut i);
-			if i.next().is_some() {
-				panic!("too many strings error");
-			}
-			(a,)
-		}
-	}
+    // To avoid conflict, this is not implemented for `A` but `(A,)`.
+    impl<A: FromStr> FromStrIterator for (A, ) {
+        fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
+            let a = parse(&mut i);
+            if i.next().is_some() {
+                panic!("too many strings error");
+            }
+            (a, )
+        }
+    }
 
     impl<A: FromStr, B: FromStr> FromStrIterator for (A, B) {
         fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(mut i: I) -> Self {
@@ -115,5 +114,19 @@ pub mod parse {
         fn from_str_iter<S: Borrow<str>, I: Iterator<Item=S>>(i: I) -> Self {
             i.map(|s| s.borrow().parse().unwrap_or_else(|_| panic!("parse error"))).collect()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_read_lines() {
+        use std::io::BufReader;
+        use super::io_ext::Reader;
+
+        let input: &[u8] = b"1\n3\n5";
+        let mut r = Reader::new(BufReader::new(input));
+        let s: Vec<String> = r.read_lines(3).collect();
+        assert_eq!(s, vec!["1", "3", "5"]);
     }
 }
