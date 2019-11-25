@@ -33,12 +33,12 @@ pub mod io_ext {
         }
     }
 
-    pub struct Lines<'a, R> {
+    pub struct Lines<'a, R: 'a> {
         reader: &'a mut Reader<R>,
         n: usize,
     }
 
-    impl<'a, R: BufRead> Iterator for Lines<'a, R> {
+    impl<'a, R: 'a + BufRead> Iterator for Lines<'a, R> {
         type Item = String;
 
         fn next(&mut self) -> Option<String> {
@@ -121,7 +121,8 @@ pub mod parse {
 mod tests {
     use std::io::BufReader;
 
-    use super::{io_ext::Reader, parse::ParseAll};
+    use super::io_ext::Reader;
+    use super::parse::ParseAll;
 
     #[test]
     fn test_read_lines() {
