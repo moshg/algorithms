@@ -78,7 +78,7 @@ pub fn div(x: u32, y: u32, modulo: u32) -> u32 {
 }
 
 /// Returns `n`P`k` mod `modulo`.
-pub fn perm(n: u32, k: u32, modulo: u32) -> u32 {
+pub fn permutation(n: u32, k: u32, modulo: u32) -> u32 {
     let mut p = 1;
     for i in 0..k {
         p = mul(p, n - i, modulo);
@@ -87,8 +87,11 @@ pub fn perm(n: u32, k: u32, modulo: u32) -> u32 {
 }
 
 /// Returns `n`C`k` mod `modulo`.
-pub fn comb(n: u32, k: u32, modulo: u32) -> u32 {
-    let num = perm(n, k, modulo);
+pub fn combination(n: u32, k: u32, modulo: u32) -> u32 {
+    use std::cmp;
+
+    let k = cmp::min(k, n - k);
+    let num = permutation(n, k, modulo);
     let mut den = 1;
     for i in 0..k {
         den = mul(den, i + 1, modulo);
@@ -134,14 +137,16 @@ mod tests {
     }
 
     #[test]
-    fn test_perm() {
-        let p = perm(8, 3, 5);
+    fn test_permutation() {
+        let p = permutation(8, 3, 5);
         assert_eq!(p, 1);
     }
 
     #[test]
-    fn test_comb() {
-        let c = comb(10, 3, 7);
+    fn test_combination() {
+        let c = combination(10, 3, 7);
+        assert_eq!(c, 1);
+        let c = combination(10, 7, 7);
         assert_eq!(c, 1);
     }
 }
