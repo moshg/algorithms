@@ -1,7 +1,9 @@
 use std::cmp;
 
-pub fn digits10(n: i64) -> i64 {
-    assert!(n >= 0);
+pub fn digits10(mut n: i64) -> i64 {
+    if n < 0 {
+        n = -n;
+    }
 
     let mut d = 1;
     let mut p = 10;
