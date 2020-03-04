@@ -12,13 +12,15 @@ pub fn digits10(n: i64) -> i64 {
     d
 }
 
-pub fn permutation(n: i64, k: i64) -> i64 {
+pub fn permutation(mut n: i64, k: i64) -> i64 {
     assert!(k >= 0);
     assert!(n >= k);
 
     let mut p = 1;
-    for i in 0..k {
-        p = p * (n - i);
+    let end = n - k;
+    while n > end {
+        p *= n;
+        n -= 1;
     }
     p
 }
