@@ -27,17 +27,18 @@ pub fn permutation(mut n: i64, k: i64) -> i64 {
     p
 }
 
-pub fn combination(n: i64, k: i64) -> i64 {
+pub fn combination(mut n: i64, k: i64) -> i64 {
     assert!(k >= 0);
     assert!(n >= k);
 
     let k = cmp::min(k, n - k);
-    let num = permutation(n, k);
-    let mut den = 1;
-    for i in 0..k {
-        den = den * (i + 1);
+    let mut c = 1;
+    for j in 1..(k + 1) {
+        c *= n;
+        n -= 1;
+        c /= j;
     }
-    num / den
+    c
 }
 
 #[cfg(test)]
