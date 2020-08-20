@@ -1,15 +1,34 @@
-/// Returns `x` + `y` mod `modulo`.
-///
-/// `x < modulo` and `y < modulo` must hold.
-#[inline]
-pub fn add(x: u32, y: u32, modulo: u32) -> u32 {
-    debug_assert!(modulo > 0);
-    debug_assert!(x < modulo && y < modulo);
-    let sum = x as u64 + y as u64;
-    if sum <= modulo as u64 {
-        sum as u32
-    } else {
-        (sum as u32).wrapping_sub(modulo)
+pub struct Modulo(u64);
+
+impl Modulo {
+    pub fn new(u32: p) -> Self {
+        if is_prime(p) {
+            Modulo(p as u64)
+        } else {
+            panic!("{} is not prime number", p);
+        }
+    }
+
+    pub fn value(self) -> u32 {
+        self.0 as u32
+    }
+
+    /// Returns `x` + `y` mod `self`
+    pub fn add(self, x: i64, y: i64) -> i64 {
+        (x % self.0 + y % self.0) % self.0
+    }
+
+    /// Returns `x` - `y` mod `self`
+    pub fn sub(self, mut x: u64, mut y: u64) -> u64 {
+        x %= self.0;
+        y %= self.0;
+        if x > y {
+
+        }
+        let d = x % self.0 - y % self.0;
+        if d >= 0 {
+
+        }
     }
 }
 
