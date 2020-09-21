@@ -17,14 +17,17 @@ enum Calc<'a, T> {
 impl<'a, T> Calc<'a, T> {
     #[inline]
     fn arg(items: &'a [T], limit: u64) -> Calc<'a, T> {
-        Calc::Arg { items: items, limit: limit }
+        Calc::Arg {
+            items: items,
+            limit: limit,
+        }
     }
 
     #[inline]
     fn as_max_mut(&mut self) -> Option<(&mut u64, &mut u64)> {
         match self {
             Calc::Arg { items: _, limit: _ } => None,
-            Calc::Max(x, y) => Some((x, y))
+            Calc::Max(x, y) => Some((x, y)),
         }
     }
 }
@@ -81,16 +84,19 @@ pub fn knapsack01<T: Item>(items: &[T], limit: u64) -> u64 {
 mod tests {
     extern crate rand;
 
-    use std::cmp::max;
     use self::rand::{thread_rng, Rng};
-    use super::{Item, knapsack01};
+    use super::{knapsack01, Item};
+    use std::cmp::max;
 
     fn knapsack01_rec<T: Item>(items: &[T], limit: u64) -> u64 {
         if let Some((item, items)) = items.split_last() {
             if item.weight() > limit {
                 knapsack01_rec(items, limit)
             } else {
-                max(knapsack01_rec(items, limit), knapsack01_rec(items, limit - item.weight()) + item.value())
+                max(
+                    knapsack01_rec(items, limit),
+                    knapsack01_rec(items, limit - item.weight()) + item.value(),
+                )
             }
         } else {
             0
@@ -106,7 +112,10 @@ mod tests {
     impl Bag {
         #[inline]
         fn new(value: u64, weight: u64) -> Bag {
-            Bag { value: value, weight: weight }
+            Bag {
+                value: value,
+                weight: weight,
+            }
         }
     }
 
@@ -128,7 +137,12 @@ mod tests {
         let limit = 10;
         assert_eq!(knapsack01(&bags, limit), 0);
 
-        let bags = [Bag::new(3, 2), Bag::new(2, 1), Bag::new(2, 1), Bag::new(5, 2)];
+        let bags = [
+            Bag::new(3, 2),
+            Bag::new(2, 1),
+            Bag::new(2, 1),
+            Bag::new(5, 2),
+        ];
         let limit = 4;
         assert_eq!(knapsack01_rec(&bags, limit), 9);
 
@@ -136,7 +150,12 @@ mod tests {
         let limit = 4;
         assert_eq!(knapsack01(&bags, limit), 7);
 
-        let bags = [Bag::new(3, 2), Bag::new(2, 1), Bag::new(2, 1), Bag::new(5, 2)];
+        let bags = [
+            Bag::new(3, 2),
+            Bag::new(2, 1),
+            Bag::new(2, 1),
+            Bag::new(5, 2),
+        ];
         let limit = 4;
         assert_eq!(knapsack01(&bags, limit), 9);
     }
@@ -155,13 +174,25 @@ mod tests {
         let limit = 4;
         assert_eq!(knapsack01(&bags, limit), 7);
 
-        let bags = [Bag::new(3, 2), Bag::new(2, 1), Bag::new(2, 1), Bag::new(5, 2)];
+        let bags = [
+            Bag::new(3, 2),
+            Bag::new(2, 1),
+            Bag::new(2, 1),
+            Bag::new(5, 2),
+        ];
         let limit = 4;
         assert_eq!(knapsack01(&bags, limit), 9);
 
         for _ in 0..10 {
             let size = thread_rng().gen_range(1, 10);
-            let bags: Vec<Bag> = (0..size).map(|_| Bag::new(thread_rng().gen_range(0, 100), thread_rng().gen_range(0, 100))).collect();
+            let bags: Vec<Bag> = (0..size)
+                .map(|_| {
+                    Bag::new(
+                        thread_rng().gen_range(0, 100),
+                        thread_rng().gen_range(0, 100),
+                    )
+                })
+                .collect();
             let limit = thread_rng().gen_range(0, 250);
             assert_eq!(knapsack01(&bags, limit), knapsack01_rec(&bags, limit));
         }

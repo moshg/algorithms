@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn test_mul() {
-        let prod = mul(1 << 31, 1 <<31, 2);
+        let prod = mul(1 << 31, 1 << 31, 2);
         assert_eq!(prod, 0);
     }
 
