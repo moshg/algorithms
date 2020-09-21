@@ -4,3 +4,4 @@ pub mod knapsack;
 pub mod math;
 pub mod modulo;
 pub mod read;
+pub mod unionfind;
